@@ -25,6 +25,7 @@ var (
 	notifySigHUPContainerID string
 	onlyExposed             bool
 	onlyPublished           bool
+	hostnameRegexp          string
 	configFiles             stringslice
 	configs                 ConfigFile
 	interval                int
@@ -107,6 +108,7 @@ type Config struct {
 	Template         string
 	Dest             string
 	Watch            bool
+	HostnameRegexp   string
 	NotifyCmd        string
 	NotifyContainers map[string]docker.Signal
 	OnlyExposed      bool
@@ -351,6 +353,7 @@ func initFlags() {
 	flag.BoolVar(&watch, "watch", false, "watch for container changes")
 	flag.BoolVar(&onlyExposed, "only-exposed", false, "only include containers with exposed ports")
 	flag.BoolVar(&onlyPublished, "only-published", false, "only include containers with published ports (implies -only-exposed)")
+	flag.StringVar(&hostnameRegexp, "hostname-regexp", "", "only include containers whose hostname matches provided regex")
 	flag.StringVar(&notifyCmd, "notify", "", "run command after template is regenerated")
 	flag.StringVar(&notifySigHUPContainerID, "notify-sighup", "", "send HUP signal to container.  Equivalent to `docker kill -s HUP container-ID`")
 	flag.Var(&configFiles, "config", "config files with template directives. Config files will be merged if this option is specified multiple times.")
@@ -388,6 +391,7 @@ func main() {
 			Template:         flag.Arg(0),
 			Dest:             flag.Arg(1),
 			Watch:            watch,
+			HostnameRegexp:   hostnameRegexp,
 			NotifyCmd:        notifyCmd,
 			NotifyContainers: make(map[string]docker.Signal),
 			OnlyExposed:      onlyExposed,

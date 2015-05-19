@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"syscall"
 	"text/template"
@@ -340,6 +341,7 @@ func generateFile(config Config, containers Context) bool {
 	filteredContainers := containers
 	filterOnlyPublished(&config, &filteredContainers)
 	filterOnlyExposed(&config, &filteredContainers)
+	filterByHostnameRegexp(config, &filteredContainers)
 
 	dest := os.Stdout
 	if config.Dest != "" {
@@ -428,5 +430,21 @@ func filterOnlyExposed(config *Config, containers *Context) {
 				removeFilteredContainer(containers, &i)
 			}
 		}
+	}
+}
+
+func filterByHostnameRegexp(config Config, containers *Context) {
+	if config.HostnameRegexp != "" {
+		c := *containers
+		for i, container := range *containers {
+			matched, err := regexp.MatchString(config.HostnameRegexp, container.Hostname)
+			if err != nil {
+				log.Fatalf("unable to match string against hostname regexp: %s", err)
+			}
+			if !matched {
+				c = append(c[:i], c[i+1:]...)
+			}
+		}
+		*containers = c
 	}
 }
